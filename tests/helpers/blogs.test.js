@@ -35,6 +35,16 @@ describe("When logged in", async () => {
             const text = await page.getContentsOf("h5");
             expect(text).toEqual("Please confirm your entries");
         });
+
+        test("Submitting then saving adds blog to index page", async () => {
+            await page.click("button.green");
+            await page.waitFor(".card");
+            const text = await page.getContentsOf(".card-title");
+            const content = await page.getContentsOf("p");
+
+            expect(text).toEqual("My Title");
+            expect(content).toEqual("My Content");
+        });
     });
 
     describe("And using invalid inputs", async () => {
@@ -48,5 +58,45 @@ describe("When logged in", async () => {
             expect(titleError).toEqual("You must provide a value");
             expect(contentError).toEqual("You must provide a value");
         });
+    });
+});
+
+describe("When user is not logged in", async () => {
+    test("User cannot create blog posts", async () => {
+        await page.waitForNavigation();
+        const result = await page.evaluate(async () => {
+            const response = await fetch("/api/blogs", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: "My Title",
+                    content: "My Content"
+                })
+            });
+
+            return response.json();
+        });
+
+        expect(result).toEqual({ error: "You must log in!" });
+    });
+
+    test("User cannot retrieve blog posts", async () => {
+        await page.waitForNavigation();
+        const result = await page.evaluate(async () => {
+            const response = await fetch("/api/blogs", {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {
+                    "content-type": "application/json"
+                }
+            });
+
+            return response.json();
+        });
+
+        expect(result).toEqual({ error: "You must log in!" });
     });
 });
