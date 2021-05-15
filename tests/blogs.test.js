@@ -5,6 +5,7 @@ let page;
 beforeEach(async () => {
     page = await Page.build();
     page.goto("localhost:3000");
+    await page.waitFor(".nav-wrapper");
 });
 
 afterEach(async () => {
@@ -62,41 +63,26 @@ describe("When logged in", async () => {
 });
 
 describe("When user is not logged in", async () => {
-    test("User cannot create blog posts", async () => {
-        await page.waitForNavigation();
-        const result = await page.evaluate(async () => {
-            const response = await fetch("/api/blogs", {
-                method: "POST",
-                credentials: "same-origin",
-                headers: {
-                    "content-type": "application/json"
-                },
-                body: JSON.stringify({
-                    title: "My Title",
-                    content: "My Content"
-                })
-            });
+    const actions = [
+        {
+            method: "get",
+            path: "/api/blogs"
+        },
+        {
+            method: "post",
+            path: "/api/blogs",
+            data: {
+                title: "T",
+                content: "C"
+            }
+        }
+    ];
 
-            return response.json();
-        });
+    test("Blog related actions are prohibited", async () => {
+        const results = await page.execRequests(actions);
 
-        expect(result).toEqual({ error: "You must log in!" });
-    });
-
-    test("User cannot retrieve blog posts", async () => {
-        await page.waitForNavigation();
-        const result = await page.evaluate(async () => {
-            const response = await fetch("/api/blogs", {
-                method: "GET",
-                credentials: "same-origin",
-                headers: {
-                    "content-type": "application/json"
-                }
-            });
-
-            return response.json();
-        });
-
-        expect(result).toEqual({ error: "You must log in!" });
+        for (let result of results) {
+            expect(result).toEqual({ error: "You must log in!" });
+        }
     });
 });
