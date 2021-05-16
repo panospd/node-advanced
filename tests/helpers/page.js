@@ -52,7 +52,7 @@ class CustomPage {
                 }
             });
 
-            return response.json();
+            return await response.json();
         }, path);
     }
 
@@ -68,7 +68,7 @@ class CustomPage {
                     body: JSON.stringify(_data)
                 });
 
-                return response.json();
+                return await response.json();
             },
             path,
             data
